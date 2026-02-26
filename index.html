@@ -60,7 +60,7 @@
 
                 <div class="search-container">
                     <label>Manual Name Search</label>
-                    <input type="text" id="searchInput" placeholder="Type attendee name..." onkeyup="searchAttendee()" disabled style="margin-bottom: 10px; font-size: 14px; padding: 12px;">
+                    <input type="text" id="searchInput" placeholder="Type name..." onkeyup="searchAttendee()" disabled style="margin-bottom: 10px; font-size: 14px; padding: 12px;">
                     <div id="searchResults"></div>
                 </div>
 
@@ -74,7 +74,7 @@
     </div>
 
     <script>
-        let masterData = {}; let checkedInList = []; let currentEventId = ""; let currentEventName = ""; let currentVolunteerName = "";
+        let masterData = {}; let checkedInList = []; let currentSlotId = ""; let currentDayName = ""; let currentVolunteerName = "";
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSound(type) { if (audioCtx.state === 'suspended') audioCtx.resume(); const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination); if (type === 'success') { osc.type = 'sine'; osc.frequency.setValueAtTime(1000, audioCtx.currentTime); gain.gain.setValueAtTime(1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1); osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 0.1); } else { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, audioCtx.currentTime); gain.gain.setValueAtTime(1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3); osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 0.3); } }
@@ -96,51 +96,61 @@
         function initScanner() {
             masterData = safeParse('masterData', {});
             if (Object.keys(masterData).length === 0) document.getElementById('scanResult').innerHTML = "<span style='color:#dc3545;'>⚠️ System Error: No Local Database Loaded.</span>";
+            
             const dropdown = document.getElementById('volunteerEventSelect');
-            const events = safeParse('itsEvents', []);
+            const daysData = safeParse('itsFixedDays', {});
+            
             dropdown.innerHTML = '<option value="">-- Select Active Session --</option>';
-            let activeEventsFound = false;
-            events.forEach(evt => {
-                if(evt.status === 'active') {
-                    dropdown.innerHTML += `<option value="${evt.id}" data-name="${evt.name}">${evt.name}</option>`;
-                    activeEventsFound = true;
+            let activeFound = false;
+            
+            // Loop through 1 to 10
+            for(let i=1; i<=10; i++) {
+                let day = daysData[i];
+                if(day && day.status === 'active') {
+                    dropdown.innerHTML += `<option value="${i}" data-name="${day.name}">${day.name}</option>`;
+                    activeFound = true;
                 }
-            });
-            if (!activeEventsFound) dropdown.innerHTML = '<option value="">-- No Active Sessions Available --</option>';
+            }
+            if (!activeFound) dropdown.innerHTML = '<option value="">-- No Active Sessions Available --</option>';
         }
 
         function switchEvent() {
             const selectEl = document.getElementById('volunteerEventSelect');
-            currentEventId = selectEl.value;
-            currentEventName = currentEventId ? selectEl.options[selectEl.selectedIndex].getAttribute('data-name') : "";
+            currentSlotId = selectEl.value;
+            currentDayName = currentSlotId ? selectEl.options[selectEl.selectedIndex].getAttribute('data-name') : "";
 
-            const state = currentEventId === "";
-            document.getElementById('attendeeId').disabled = state; document.getElementById('submitBtn').disabled = state; document.getElementById('searchInput').disabled = state;
+            const state = currentSlotId === "";
+            document.getElementById('attendeeId').disabled = state; 
+            document.getElementById('submitBtn').disabled = state; 
+            document.getElementById('searchInput').disabled = state;
+            
             if (state) {
                 document.getElementById('scanResult').innerHTML = "<span style='color: rgba(255,255,255,0.5);'>Awaiting session selection...</span>";
-                document.getElementById('totalCount').innerText = "0"; document.getElementById('undoBtn').style.display = 'none';
+                document.getElementById('totalCount').innerText = "0"; 
+                document.getElementById('undoBtn').style.display = 'none';
             } else {
-                document.getElementById('scanResult').innerHTML = `<span style='color: var(--primary-gold);'>Ready for "${currentEventName}" scans...</span>`;
-                checkedInList = safeParse('scanningLogs_' + currentEventId, []);
-                document.getElementById('totalCount').innerText = checkedInList.length; checkUndoVisibility(); document.getElementById('attendeeId').focus();
+                document.getElementById('scanResult').innerHTML = `<span style='color: var(--primary-gold);'>Ready for "${currentDayName}" scans...</span>`;
+                checkedInList = safeParse('scanningLogs_slot_' + currentSlotId, []);
+                document.getElementById('totalCount').innerText = checkedInList.length; 
+                checkUndoVisibility(); 
+                document.getElementById('attendeeId').focus();
             }
         }
 
-        function checkUndoVisibility() { document.getElementById('undoBtn').style.display = (currentEventId !== "" && checkedInList.length > 0) ? 'block' : 'none'; }
+        function checkUndoVisibility() { document.getElementById('undoBtn').style.display = (currentSlotId !== "" && checkedInList.length > 0) ? 'block' : 'none'; }
 
-        // Local Tab Syncing
         window.addEventListener('storage', function(e) {
-            if (e.key === 'scanningLogs_' + currentEventId) {
-                checkedInList = safeParse('scanningLogs_' + currentEventId, []);
+            if (e.key === 'scanningLogs_slot_' + currentSlotId) {
+                checkedInList = safeParse('scanningLogs_slot_' + currentSlotId, []);
                 document.getElementById('totalCount').innerText = checkedInList.length; checkUndoVisibility();
             }
-            if (e.key === 'itsEvents') { let tempId = currentEventId; initScanner(); document.getElementById('volunteerEventSelect').value = tempId; }
+            if (e.key === 'itsFixedDays') { let tempId = currentSlotId; initScanner(); document.getElementById('volunteerEventSelect').value = tempId; }
         });
 
         function handleKeyPress(event) { if (event.key === "Enter") verifyAndLog(); }
 
         function searchAttendee() {
-            if (currentEventId === "") return;
+            if (currentSlotId === "") return;
             const query = document.getElementById('searchInput').value.toLowerCase().trim();
             const resultsDiv = document.getElementById('searchResults'); resultsDiv.innerHTML = ''; 
             if (query.length < 2) return; 
@@ -158,16 +168,16 @@
         }
 
         function undoLastScan() {
-            if (checkedInList.length === 0 || currentEventId === "") return;
+            if (checkedInList.length === 0 || currentSlotId === "") return;
             let removedPerson = checkedInList.pop();
-            localStorage.setItem('scanningLogs_' + currentEventId, JSON.stringify(checkedInList));
+            localStorage.setItem('scanningLogs_slot_' + currentSlotId, JSON.stringify(checkedInList));
             document.getElementById('totalCount').innerText = checkedInList.length;
             document.getElementById('scanResult').innerHTML = `<span style='color:#ffc107; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;'>Scan Removed</span><span class='result-name' style='color:#aaa; text-decoration: line-through;'>${removedPerson.name}</span>`;
             checkUndoVisibility(); document.getElementById('attendeeId').focus();
         }
 
         function verifyAndLog() {
-            if (currentEventId === "") return alert("You must select a Session first.");
+            if (currentSlotId === "") return alert("You must select a Session first.");
             const inputField = document.getElementById('attendeeId'); const inputId = inputField.value.trim(); const resultDiv = document.getElementById('scanResult');
 
             if (Object.keys(masterData).length === 0) return alert("Local Database empty. Ask Admin to load data.");
@@ -178,21 +188,21 @@
             if (alreadyCheckedIn) {
                 playSound('error'); flashPanel('glow-yellow');
                 let displayName = masterData[inputId] ? masterData[inputId].name : "Mehman";
-                resultDiv.innerHTML = `<span style='color:#ffc107; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;'>Already Inside</span><span class='result-name'>${displayName}</span>`;
+                resultDiv.innerHTML = `<span style='color:#ffc107; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;'>Already Scanned</span><span class='result-name'>${displayName}</span>`;
             } else {
                 playSound('success'); flashPanel('glow-green');
                 const timeNow = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
                 
                 if (masterData[inputId]) {
                     const person = masterData[inputId];
-                    resultDiv.innerHTML = `<span style='color:#28a745; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;'>Access Granted</span><span class='result-name'>${person.name}</span>`;
+                    resultDiv.innerHTML = `<span style='color:#28a745; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;'>DONE SCAN</span><span class='result-name'>${person.name}</span>`;
                     checkedInList.push({ time: timeNow, id: inputId, name: person.name, volunteer: currentVolunteerName });
                 } else {
                     resultDiv.innerHTML = `<span style='color:#28a745; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;'>Guest Approved</span><span class='result-name'>Mehman</span>`;
                     checkedInList.push({ time: timeNow, id: inputId, name: "Mehman", volunteer: currentVolunteerName });
                 }
 
-                localStorage.setItem('scanningLogs_' + currentEventId, JSON.stringify(checkedInList));
+                localStorage.setItem('scanningLogs_slot_' + currentSlotId, JSON.stringify(checkedInList));
                 document.getElementById('totalCount').innerText = checkedInList.length; checkUndoVisibility();
             }
             
