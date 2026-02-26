@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ITS Cloud Scanner</title>
+    <title>ITS SCANNING</title>
+    <link rel="icon" href="logo.svg type="image/svg">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -12,7 +13,7 @@
         body { font-family: 'Poppins', sans-serif; margin: 0; padding: 0; color: var(--text-light); min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background-image: url('image_062684.jpg'); background-color: #111; background-size: cover; background-position: center; background-attachment: fixed; }
         .bg-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.1) 100%); z-index: -1; }
         .main-container { width: 100%; display: flex; justify-content: center; padding: 20px; box-sizing: border-box;}
-        .glass-card { background: var(--glass-bg); backdrop-filter: blur(16px); border: 1px solid var(--glass-border); padding: 40px 50px; border-radius: 20px; width: 100%; max-width: 450px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); transition: box-shadow 0.4s ease; box-sizing: border-box;}
+        .glass-card { background: var(--glass-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid var(--glass-border); padding: 40px 50px; border-radius: 20px; width: 100%; max-width: 450px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); transition: box-shadow 0.4s ease; box-sizing: border-box;}
         .glow-green { box-shadow: 0 0 40px var(--success-glow), inset 0 0 20px var(--success-glow) !important; border-color: #28a745 !important; } .glow-red { box-shadow: 0 0 40px var(--error-glow), inset 0 0 20px var(--error-glow) !important; border-color: #dc3545 !important; } .glow-yellow { box-shadow: 0 0 40px var(--warning-glow), inset 0 0 20px var(--warning-glow) !important; border-color: #ffc107 !important; }
         .header-title { font-family: 'Cinzel', serif; font-size: 24px; letter-spacing: 2px; text-align: center; margin: 0 0 30px 0; color: var(--primary-gold); text-shadow: 2px 2px 4px rgba(0,0,0,0.5); border-bottom: 1px solid rgba(193, 154, 107, 0.3); padding-bottom: 15px; }
         input[type="text"], input[type="password"], select { width: 100%; padding: 15px 20px; font-size: 16px; font-family: 'Poppins', sans-serif; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; background-color: rgba(255, 255, 255, 0.1); color: white; box-sizing: border-box; transition: 0.3s; }
@@ -46,7 +47,9 @@
 
             <div id="scannerView">
                 <select id="volunteerEventSelect" onchange="switchEvent()"><option value="">-- Select Active Session --</option></select>
-                <input type="text" id="attendeeId" maxlength="8" placeholder="ENTER ITS NUMBER" onkeypress="handleKeyPress(event)" disabled>
+                
+                <input type="text" id="attendeeId" inputmode="numeric" pattern="\d*" oninput="this.value = this.value.replace(/[^0-9]/g, '')" maxlength="8" placeholder="ENTER ITS NUMBER" onkeypress="handleKeyPress(event)" disabled>
+                
                 <button class="btn-primary" id="submitBtn" onclick="verifyAndLog()" disabled>Log Attendance</button>
                 <div id="scanResult"><span style="color: rgba(255,255,255,0.5);">Awaiting session selection...</span></div>
                 <button id="undoBtn" class="btn-undo" onclick="undoLastScan()">↩️ Undo Previous Scan</button>
@@ -68,13 +71,13 @@
     <script>
         // 🔴 🔴 🔴 PASTE YOUR FIREBASE CONFIG HERE 🔴 🔴 🔴
         const firebaseConfig = {
-            apiKey: "AIzaSyB8Dndt40YAMuL7Onvpk3c5JiMClMT0jA4",
-            authDomain: "its-scanning-f8f5a.firebaseapp.com",
-            databaseURL: "https://its-scanning-f8f5a-default-rtdb.firebaseio.com",
-            projectId: "its-scanning-f8f5a",
-            storageBucket: "its-scanning-f8f5a.firebasestorage.app",
-            messagingSenderId: "590874259733",
-            appId: "1:590874259733:web:314d6a1fadb3780429b91c"
+  apiKey: "AIzaSyB8Dndt40YAMuL7Onvpk3c5JiMClMT0jA4",
+  authDomain: "its-scanning-f8f5a.firebaseapp.com",
+  databaseURL: "https://its-scanning-f8f5a-default-rtdb.firebaseio.com",
+  projectId: "its-scanning-f8f5a",
+  storageBucket: "its-scanning-f8f5a.firebasestorage.app",
+  messagingSenderId: "590874259733",
+  appId: "1:590874259733:web:314d6a1fadb3780429b91c"
         };
         // --------------------------------------------------
 
@@ -122,6 +125,7 @@
                 updateDropdown();
             } else { alert("❌ Invalid password. Ask Admin to add you."); document.getElementById('volPassword').value = ''; }
         }
+
         function updateDropdown() {
             const dropdown = document.getElementById('volunteerEventSelect');
             dropdown.innerHTML = '<option value="">-- Select Active Session --</option>';
@@ -212,7 +216,7 @@
             if (currentSlotId === "") return alert("You must select a Session first.");
             const inputField = document.getElementById('attendeeId'); const inputId = inputField.value.trim(); const resultDiv = document.getElementById('scanResult');
 
-            if (Object.keys(masterData).length === 0) return alert("Database missing.");
+            if (Object.keys(masterData).length === 0) return alert("Database missing. Contact Admin.");
             if (inputId.length !== 8) { playSound('error'); flashPanel('glow-red'); resultDiv.innerHTML = `<span style='color:#dc3545; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;'>Error</span><span class='result-name' style='color:#dc3545;'>Invalid ITS Number</span>`; inputField.value = ''; return; }
 
             // Check if ANY volunteer has already scanned this person globally
@@ -221,13 +225,13 @@
             if (alreadyCheckedIn) {
                 playSound('error'); flashPanel('glow-yellow');
                 let displayName = masterData[inputId] ? masterData[inputId].name : "Mehman";
-                resultDiv.innerHTML = `<span style='color:#ffc107; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;'>Already Inside</span><span class='result-name'>${displayName}</span>`;
+                resultDiv.innerHTML = `<span style='color:#ffc107; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;'>Already SCANNED</span><span class='result-name'>${displayName}</span>`;
             } else {
                 playSound('success'); flashPanel('glow-green');
                 const timeNow = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
                 
                 let pName = masterData[inputId] ? masterData[inputId].name : "Mehman";
-                let statusMsg = masterData[inputId] ? "Access Granted" : "Guest Approved";
+                let statusMsg = masterData[inputId] ? "SCANNED" : "Guest Approved";
                 
                 resultDiv.innerHTML = `<span style='color:#28a745; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;'>${statusMsg}</span><span class='result-name'>${pName}</span>`;
                 
@@ -245,4 +249,3 @@
     </script>
 </body>
 </html>
-
