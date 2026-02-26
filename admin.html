@@ -97,13 +97,13 @@
 
         // 🔴 🔴 🔴 PASTE YOUR FIREBASE CONFIG HERE 🔴 🔴 🔴
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT.firebaseapp.com",
-            databaseURL: "YOUR_DATABASE_URL",
-            projectId: "YOUR_PROJECT",
-            storageBucket: "YOUR_PROJECT.appspot.com",
-            messagingSenderId: "123456",
-            appId: "1:12345:web:abcd"
+        apiKey: "AIzaSyB8Dndt40YAMuL7Onvpk3c5JiMClMT0jA4",
+        authDomain: "its-scanning-f8f5a.firebaseapp.com",
+        databaseURL: "https://its-scanning-f8f5a-default-rtdb.firebaseio.com",
+        projectId: "its-scanning-f8f5a",
+        storageBucket: "its-scanning-f8f5a.firebasestorage.app",
+        messagingSenderId: "590874259733",
+        appId: "1:590874259733:web:314d6a1fadb3780429b91c"
         };
         // --------------------------------------------------
 
@@ -137,15 +137,7 @@
                     for(let i=1; i<=10; i++) globalDays[i] = { name: `Day ${i}`, status: i === 1 ? 'active' : 'upcoming' };
                     db.ref('config/days').set(globalDays);
                 }
-                const firebaseConfig = {
-                    apiKey: "AIzaSyB8Dndt40YAMuL7Onvpk3c5JiMClMT0jA4",
-                    authDomain: "its-scanning-f8f5a.firebaseapp.com",
-                    databaseURL: "https://its-scanning-f8f5a-default-rtdb.firebaseio.com",
-                    projectId: "its-scanning-f8f5a",
-                    storageBucket: "its-scanning-f8f5a.firebasestorage.app",
-                    messagingSenderId: "590874259733",
-                    appId: "1:590874259733:web:314d6a1fadb3780429b91c"
-                };
+                
                 renderDays();
             });
 
@@ -251,3 +243,4 @@
     </script>
 </body>
 </html>
+
