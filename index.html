@@ -345,7 +345,7 @@
     <div class="bg-overlay"></div>
     <div class="main-container">
         <div class="glass-card" id="mainCard">
-            <h2 class="header-title">Idaratut Ta'reef Al Shakhsi</h2>
+            <h2 class="header-title">ITS Scanning Salumber</h2>
 
             <div id="loginView">
                 <div style="text-align: center; margin-bottom: 15px; color: rgba(255,255,255,0.7); font-size: 14px;">
@@ -354,13 +354,18 @@
 
                 <input type="password" id="volPassword" placeholder="Enter Unique Password"
                     onkeypress="if(event.key==='Enter') loginVolunteer()" disabled>
-                <button class="btn-primary" id="loginBtn" onclick="loginVolunteer()" disabled>Secure Login</button>
+                <button class="btn-primary" id="loginBtn" onclick="loginVolunteer()" disabled>Login</button>
             </div>
 
             <div id="scannerView">
-                <button id="goToAdminBtn" class="btn-primary"
-                    style="display: none; background: linear-gradient(135deg, #0056b3, #004494); color: white; margin-bottom: 20px;"
-                    onclick="window.location.href='admin.html'">⚙️ Open Admin Panel</button>
+                <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <button id="goToAdminBtn" class="btn-primary"
+                        style="display: none; background: linear-gradient(135deg, #0056b3, #004494); color: white; flex: 1;"
+                        onclick="window.location.href='admin.html'">⚙️ Admin Panel</button>
+                    <button class="btn-primary"
+                        style="background: linear-gradient(135deg, #dc3545, #b02a37); color: white; flex: 1;"
+                        onclick="logout()">🚪 Logout</button>
+                </div>
                 <select id="volunteerEventSelect" onchange="switchEvent()">
                     <option value="">-- Select Active Session --</option>
                 </select>
@@ -369,14 +374,14 @@
                     oninput="this.value = this.value.replace(/[^0-9]/g, '')" maxlength="8"
                     placeholder="ENTER ITS NUMBER" onkeypress="handleKeyPress(event)" disabled>
 
-                <button class="btn-primary" id="submitBtn" onclick="verifyAndLog()" disabled>Log Attendance</button>
+                <button class="btn-primary" id="submitBtn" onclick="verifyAndLog()" disabled>SCAN</button>
                 <div id="scanResult"><span style="color: rgba(255,255,255,0.5);">Awaiting session selection...</span>
                 </div>
                 <button id="undoBtn" class="btn-undo" onclick="undoLastScan()">↩️ Undo Previous Scan</button>
 
                 <div class="search-container">
                     <label>Manual Name Search</label>
-                    <input type="text" id="searchInput" placeholder="Type attendee name..." onkeyup="searchAttendee()"
+                    <input type="text" id="searchInput" placeholder="Type Muminee name..." onkeyup="searchAttendee()"
                         disabled style="margin-bottom: 10px; font-size: 14px; padding: 12px;">
                     <div id="searchResults"></div>
                 </div>
@@ -387,7 +392,7 @@
                         <div class="stat-value" id="volNameDisplay">-</div>
                     </div>
                     <div class="stat-box" style="text-align: right;">
-                        <div class="stat-label">Global Total Inside</div>
+                        <div class="stat-label">TOTAL SCANNED</div>
                         <div class="stat-large" id="totalCount">0</div>
                     </div>
                 </div>
@@ -438,9 +443,14 @@
             db.ref('config/volunteers').on('value', snap => { cloudVols = snap.val() || {}; });
         };
 
+        function logout() {
+            sessionStorage.clear();
+            window.location.reload();
+        }
+
         function loginVolunteer() {
             const pass = document.getElementById('volPassword').value.trim();
-            const ADMIN_PASSWORD = "admin123"; // Owner password
+            const ADMIN_PASSWORD = "Aliasgar.11"; // Owner password
 
             if (pass === ADMIN_PASSWORD) {
                 // Owner Login
@@ -485,7 +495,7 @@
                 document.getElementById('scannerView').style.display = 'block';
                 document.getElementById('volNameDisplay').innerText = currentVolunteerName;
                 updateDropdown();
-            } else { alert("❌ Invalid password. Ask Admin to add you."); document.getElementById('volPassword').value = ''; }
+            } else { alert("❌ Invalid password. Ask Co-ordinator to add you."); document.getElementById('volPassword').value = ''; }
         }
 
         function updateDropdown() {
