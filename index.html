@@ -462,9 +462,13 @@
                 // Handle both old string format and new object format
                 if (typeof volData === 'string') {
                     currentVolunteerName = volData;
-                } else {
-                    currentVolunteerName = volData.name;
+                    isVolAdmin = false;
+                } else if (typeof volData === 'object' && volData !== null) {
+                    currentVolunteerName = volData.name || "Unknown";
                     isVolAdmin = volData.isAdmin === true;
+                } else {
+                    currentVolunteerName = String(volData);
+                    isVolAdmin = false;
                 }
 
                 if (isVolAdmin) {
